@@ -638,6 +638,7 @@ export async function saveTopicProgress(studentId, topicId, { score, maxScore })
 export async function getStudentStats(studentId) {
   const progress = await getStudentProgress(studentId);
   const totalStars = progress.reduce((sum, p) => sum + (p.stars || 0), 0);
-  const completedTopics = progress.filter(p => p.stars > 0).length;
+  // Тема считается пройденной если есть любая запись прогресса (даже с 0 звёзд)
+  const completedTopics = progress.length;
   return { totalStars, completedTopics, progress };
 }

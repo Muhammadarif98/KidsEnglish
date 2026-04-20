@@ -113,8 +113,14 @@ export async function renderClassHome(code) {
               const isEmpty = count === 0;
               const topicProgress = progressMap.get(t.id);
               const stars = topicProgress?.stars || 0;
-              const starsHTML = stars > 0 ? `<div class="ke-topic-card__stars">${'⭐'.repeat(stars)}</div>` : '';
-              const completedClass = stars > 0 ? 'ke-topic-card--completed' : '';
+              const hasProgress = !!topicProgress;
+              // Показываем звёзды если есть, иначе галочку если тема пройдена
+              const starsHTML = stars > 0
+                ? `<div class="ke-topic-card__stars">${'⭐'.repeat(stars)}</div>`
+                : hasProgress
+                  ? `<div class="ke-topic-card__stars ke-topic-card__stars--done">✓</div>`
+                  : '';
+              const completedClass = hasProgress ? 'ke-topic-card--completed' : '';
               return `
                 <button class="ke-topic-card ${completedClass}"
                         data-id="${esc(t.id)}"
