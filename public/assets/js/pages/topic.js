@@ -1,10 +1,11 @@
 // pages/topic.js — Sequential exercise flow scoped to a class.
 
-import { getTeacherByCode, getTopic, listExercises } from '../db.js';
+import { getTeacherByCode, getTopic, listExercises, getStudentStats } from '../db.js';
 import { topicAccent } from '../tokens.js';
 import { topBarHTML, auroraHTML, starfieldHTML, progressHTML, burstConfetti, esc } from '../ui.js';
 import { navigate } from '../router.js';
 import { getWordIcon } from '../icons.js';
+import { getStudentSession } from './landing.js';
 
 const sessionStore = new Map();
 
@@ -105,10 +106,19 @@ export async function renderTopic(code, topicId) {
   }
 
   const exercises = await listExercises({ ownerId: teacher.uid, topicId });
+
+  // Получаем звёзды ученика
+  const session = getStudentSession();
+  let totalStars = 0;
+  if (session?.id) {
+    const stats = await getStudentStats(session.id);
+    totalStars = stats.totalStars;
+  }
+
   if (exercises.length === 0) {
     root.innerHTML = `
       <section class="ke-page">${auroraHTML()}${starfieldHTML(30)}
-        ${topBarHTML({ backHref: classHome, title: `<span style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:20px">${esc(topic.emoji)}</span> ${esc(topic.title)}</span>` })}
+        ${topBarHTML({ backHref: classHome, stars: totalStars, title: `<span style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:20px">${esc(topic.emoji)}</span> ${esc(topic.title)}</span>` })}
         <div style="padding: 60px 20px; text-align: center;">
           <div style="font-size: 56px;">📝</div>
           <h2 style="font-family: var(--ke-font-display); font-weight: 600; margin-top: 12px;">Пока нет заданий</h2>
@@ -120,7 +130,7 @@ export async function renderTopic(code, topicId) {
   }
 
   const state = {
-    topic, exercises, code, teacher, classHome,
+    topic, exercises, code, teacher, classHome, totalStars,
     idx: 0, score: 0, answered: null,
   };
   sessionStore.set(topicId, state);
@@ -128,7 +138,7 @@ export async function renderTopic(code, topicId) {
 }
 
 function paint(state) {
-  const { topic, exercises, idx, answered, code, classHome } = state;
+  const { topic, exercises, idx, answered, code, classHome, totalStars } = state;
   const total = exercises.length;
   const q = exercises[idx];
   const acc = topicAccent(topic.id.split('_').slice(1, 2).join('_') || topic.id);
@@ -208,7 +218,7 @@ function paint(state) {
     <section class="ke-page">
       ${auroraHTML()}
       ${starfieldHTML(30)}
-      ${topBarHTML({ backHref: classHome, title: titleHTML })}
+      ${topBarHTML({ backHref: classHome, stars: totalStars, title: titleHTML })}
       ${progressHTML(idx + 1, total)}
       <div class="ke-exercise">
         <div class="ke-qcard" style="box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 -3px 0 rgba(0,0,0,0.2) inset, 0 20px 40px -8px rgba(0,0,0,0.4), 0 0 60px -10px ${acc.glow};">

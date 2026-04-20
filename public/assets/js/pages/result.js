@@ -1,6 +1,6 @@
 // pages/result.js — End-of-topic result screen.
 
-import { getTeacherByCode, getTopic, saveTopicProgress } from '../db.js';
+import { getTeacherByCode, getTopic, saveTopicProgress, getStudentStats } from '../db.js';
 import { topicAccent } from '../tokens.js';
 import { topBarHTML, auroraHTML, starfieldHTML, burstConfetti, esc } from '../ui.js';
 import { mascotSVG } from '../mascot.js';
@@ -32,9 +32,13 @@ export async function renderResult(code, topicId) {
 
   // Сохраняем прогресс в БД если есть авторизованный ученик
   const session = getStudentSession();
+  let totalStars = 0;
   if (session?.id) {
     try {
       await saveTopicProgress(session.id, topicId, { score, maxScore: total });
+      // Получаем актуальные звёзды после сохранения
+      const stats = await getStudentStats(session.id);
+      totalStars = stats.totalStars;
     } catch (err) {
       console.error('Failed to save progress:', err);
     }
@@ -50,7 +54,7 @@ export async function renderResult(code, topicId) {
     <section class="ke-page">
       ${auroraHTML()}
       ${starfieldHTML(50)}
-      ${topBarHTML({ backHref: classHome })}
+      ${topBarHTML({ backHref: classHome, stars: totalStars })}
       <div class="ke-result">
         <div class="ke-result__trophy-wrap">
           <div class="ke-result__glow" style="background: radial-gradient(circle, ${acc.glow}, transparent 70%);"></div>
