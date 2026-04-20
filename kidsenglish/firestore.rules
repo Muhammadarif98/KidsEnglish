@@ -1,0 +1,66 @@
+rules_version = '2';
+
+// KidsEnglish — Firestore Rules (multi-tenant)
+//
+// Модель безопасности:
+//   • Чтение тем, заданий и профилей преподавателей — публичное
+//     (дети заходят без регистрации).
+//   • Запись — только владельцем: ownerId в документе должен совпадать
+//     с request.auth.uid.
+//   • classCodes — публичный справочник "код → uid преподавателя".
+//     Создавать может только тот, кто становится владельцем;
+//     удалять — только сам владелец.
+//   • teachers/{uid} — профиль препода; редактировать может только он сам.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // --- teachers/{uid} ---
+    match /teachers/{uid} {
+      allow read: if true;  // публичное отображение имени препода у детей
+      allow create: if isAuth() && request.auth.uid == uid;
+      allow update, delete: if isAuth() && request.auth.uid == uid;
+    }
+
+    // --- classCodes/{CODE} ---
+    // Публичный справочник: позволяет ребёнку ввести код класса и узнать ownerId.
+    match /classCodes/{code} {
+      allow read: if true;
+      // Создать может только будущий владелец, и только один раз.
+      allow create: if isAuth()
+                    && request.resource.data.ownerId == request.auth.uid;
+      // Владелец может менять teacherName и удалять свою запись.
+      allow update, delete: if isAuth()
+                            && resource.data.ownerId == request.auth.uid;
+    }
+
+    // --- topics/{id} ---
+    match /topics/{id} {
+      allow read: if true;  // дети читают открыто; фильтрация по ownerId — на клиенте
+      allow create: if isAuth()
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuth()
+                            && resource.data.ownerId == request.auth.uid
+                            && request.resource.data.ownerId == resource.data.ownerId;
+    }
+
+    // --- exercises/{id} ---
+    match /exercises/{id} {
+      allow read: if true;
+      allow create: if isAuth()
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuth()
+                            && resource.data.ownerId == request.auth.uid
+                            && request.resource.data.ownerId == resource.data.ownerId;
+    }
+
+    // Всё остальное — запрещено.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

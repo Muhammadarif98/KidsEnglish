@@ -1,0 +1,31 @@
+# Preview-деплой при открытии Pull Request.
+# Каждый PR получает свой временный URL вида
+#   https://kidsenglish-51c58--pr-123-abc123.web.app
+# для проверки изменений до слияния в main.
+
+name: Deploy preview on PR
+
+on:
+  pull_request:
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    # Не запускаем для форков во избежание утечки secrets
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KIDSENGLISH_51C58 }}
+          projectId: kidsenglish-51c58
+          expires: 7d

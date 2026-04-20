@@ -1,0 +1,38 @@
+# Автодеплой KidsEnglish на Firebase Hosting при push в ветку main.
+# Триггерится GitHub автоматически — вам ничего не надо делать вручную.
+#
+# Как это работает:
+#   1. Вы делаете коммит в main (через веб-интерфейс GitHub или git push).
+#   2. GitHub запускает этот workflow.
+#   3. Workflow берёт содержимое /public и публикует на Firebase Hosting.
+#   4. Через 30-60 секунд обновлённый сайт доступен на
+#      https://kidsenglish-51c58.web.app
+#
+# Требует secret FIREBASE_SERVICE_ACCOUNT_KIDSENGLISH_51C58 в настройках
+# репозитория (см. README.md раздел "Деплой через GitHub").
+
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+# Позволяет запускать вручную из вкладки Actions
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KIDSENGLISH_51C58 }}
+          projectId: kidsenglish-51c58
+          channelId: live
