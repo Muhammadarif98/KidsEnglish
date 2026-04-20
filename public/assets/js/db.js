@@ -642,3 +642,109 @@ export async function getStudentStats(studentId) {
   const completedTopics = progress.length;
   return { totalStars, completedTopics, progress };
 }
+
+// ─── Force Reseed (для исправления неполного сидирования) ───
+/**
+ * Принудительно пересидирует контент учителя.
+ * Удаляет все существующие темы/упражнения и создаёт заново из seed.js.
+ * Вызов: в консоли браузера после логина как учитель:
+ *   const db = await import('./assets/js/db.js'); await db.forceReseedTeacher('UID');
+ */
+export async function forceReseedTeacher(uid) {
+  if (!uid) throw new Error('forceReseedTeacher: uid required');
+
+  const ctx = await fb();
+  if (!ctx) {
+    console.log('Firebase не подключён, используется локальный режим');
+    // Локальный режим — просто очищаем и пересидируем
+    lsWrite(LS.topics, lsRead(LS.topics).filter(t => t.ownerId !== uid));
+    lsWrite(LS.exercises, lsRead(LS.exercises).filter(e => e.ownerId !== uid));
+    const seeded = new Set(lsRead(LS.seededSets));
+    seeded.delete(uid);
+    lsWrite(LS.seededSets, [...seeded]);
+    await ensureTeacherSeeded(uid);
+    console.log('Локальное пересидирование завершено');
+    return { success: true, mode: 'local' };
+  }
+
+  const { fs, db: fireDb } = ctx;
+  console.log('Удаляем существующие темы...');
+
+  // 1. Удаляем все темы
+  const topicsQuery = fs.query(fs.collection(fireDb, 'topics'), fs.where('ownerId', '==', uid));
+  const topicsSnap = await fs.getDocs(topicsQuery);
+  console.log(`Найдено ${topicsSnap.size} тем`);
+  for (const d of topicsSnap.docs) {
+    await fs.deleteDoc(d.ref);
+  }
+
+  // 2. Удаляем все упражнения
+  console.log('Удаляем существующие упражнения...');
+  const exQuery = fs.query(fs.collection(fireDb, 'exercises'), fs.where('ownerId', '==', uid));
+  const exSnap = await fs.getDocs(exQuery);
+  console.log(`Найдено ${exSnap.size} упражнений`);
+  for (const d of exSnap.docs) {
+    await fs.deleteDoc(d.ref);
+  }
+
+  // 3. Очищаем localStorage флаг
+  const seeded = new Set(lsRead(LS.seededSets));
+  seeded.delete(uid);
+  lsWrite(LS.seededSets, [...seeded]);
+
+  // 4. Сидируем заново (batch'ами по 400 операций)
+  console.log('Сидируем контент...');
+  console.log(`SEED_TOPICS: ${SEED_TOPICS.length} тем`);
+  console.log(`SEED_EXERCISES: ${SEED_EXERCISES.length} упражнений`);
+
+  const BATCH_SIZE = 400;
+  const tsuffix = Date.now().toString(36).slice(-4);
+  const uidPrefix = uid.slice(0, 8);
+  const topicIdMap = {};
+
+  // Маппинг ID тем
+  for (const t of SEED_TOPICS) {
+    topicIdMap[t.id] = `${uidPrefix}_${t.id}_${tsuffix}`;
+  }
+
+  // Собираем все операции
+  const allOps = [];
+  for (const t of SEED_TOPICS) {
+    allOps.push({
+      collection: 'topics',
+      id: topicIdMap[t.id],
+      data: { ownerId: uid, title: t.title, emoji: t.emoji, order: t.order, enabled: t.enabled },
+    });
+  }
+  for (const e of SEED_EXERCISES) {
+    allOps.push({
+      collection: 'exercises',
+      id: `${uidPrefix}_${e.id}_${tsuffix}`,
+      data: {
+        ownerId: uid, topicId: topicIdMap[e.topicId],
+        type: e.type, order: e.order, question: e.question,
+        options: e.options, answer: e.answer, explanation: e.explanation, imageUrl: e.imageUrl,
+      },
+    });
+  }
+
+  // Выполняем batch'ами
+  let written = 0;
+  for (let i = 0; i < allOps.length; i += BATCH_SIZE) {
+    const chunk = allOps.slice(i, i + BATCH_SIZE);
+    const batch = fs.writeBatch(fireDb);
+    for (const op of chunk) {
+      batch.set(fs.doc(fireDb, op.collection, op.id), op.data);
+    }
+    await batch.commit();
+    written += chunk.length;
+    console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: записано ${written}/${allOps.length}`);
+  }
+
+  // 5. Отмечаем как засидированного
+  seeded.add(uid);
+  lsWrite(LS.seededSets, [...seeded]);
+
+  console.log('Пересидирование завершено! Перезагрузите страницу.');
+  return { success: true, topics: SEED_TOPICS.length, exercises: SEED_EXERCISES.length };
+}
