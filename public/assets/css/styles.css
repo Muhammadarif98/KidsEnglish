@@ -1179,3 +1179,621 @@ img { max-width: 100%; display: block; }
   .ke-classcode-banner__left { min-width: auto; width: 100%; text-align: center; }
   .ke-classcode-banner__right { width: 100%; }
 }
+
+/* ================================================
+   NEW: Landing form with two fields (code + password)
+   ================================================ */
+.ke-code-form--two-fields {
+  max-width: 400px;
+}
+.ke-code-form__row {
+  display: flex; gap: 12px;
+}
+.ke-code-form__field {
+  flex: 1; display: flex; flex-direction: column; gap: 6px;
+}
+.ke-code-form__label {
+  font-size: 12px; font-weight: 700; color: var(--ke-text-soft);
+  text-transform: uppercase; letter-spacing: 1px;
+  text-align: left; padding-left: 4px;
+}
+.ke-code-input--password {
+  letter-spacing: 2px;
+  text-transform: none;
+}
+.ke-code-submit--full {
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .ke-code-form__row { flex-direction: column; }
+  .ke-code-input { font-size: 22px; letter-spacing: 3px; padding: 14px 16px; }
+}
+
+/* ================================================
+   NEW: Student management page
+   ================================================ */
+.ke-admin-table--students .ke-admin-table__head {
+  grid-template-columns: 50px 1fr 140px 160px 120px;
+}
+.ke-admin-table--students .ke-admin-table__row {
+  grid-template-columns: 50px 1fr 140px 160px 120px;
+}
+.ke-admin-table__student {
+  display: flex; align-items: center; gap: 12px;
+}
+.ke-admin-table__avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, #8B5CF6, #F472B6);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ke-font-display); font-weight: 700;
+  font-size: 14px; color: #fff;
+}
+.ke-admin-table__name {
+  font-weight: 700; color: #140A36;
+}
+.ke-admin-table__password {
+  display: flex; align-items: center; gap: 6px;
+}
+.ke-password-code {
+  font-family: var(--ke-font-mono);
+  font-size: 14px; font-weight: 600;
+  padding: 6px 10px; border-radius: 8px;
+  background: #F8F4FF;
+  color: #6D28D9;
+  border: 1px solid #EEE8F7;
+}
+.ke-admin-table__progress {
+  font-size: 13px; font-weight: 600;
+}
+.ke-admin-iconbtn--small {
+  width: 28px; height: 28px; font-size: 12px;
+}
+.ke-admin-info-box {
+  padding: 16px 20px; border-radius: 16px;
+  background: linear-gradient(135deg, #EEF2FF 0%, #F0FDF4 100%);
+  border: 1px solid #E0E7FF;
+}
+.ke-admin-bulk-actions {
+  display: flex; gap: 12px; justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .ke-admin-table--students .ke-admin-table__head,
+  .ke-admin-table--students .ke-admin-table__row {
+    grid-template-columns: 40px 1fr 100px 90px;
+  }
+}
+@media (max-width: 600px) {
+  .ke-admin-table--students .ke-admin-table__head,
+  .ke-admin-table--students .ke-admin-table__row {
+    grid-template-columns: 1fr 100px 70px;
+  }
+  .ke-admin-table--students .ke-admin-table__row > div:first-child { display: none; }
+}
+
+/* ================================================
+   NEW: Teacher profile page
+   ================================================ */
+.ke-profile-card {
+  display: flex; align-items: center; gap: 20px;
+  padding: 24px; border-radius: 20px;
+  background: linear-gradient(135deg, #F8F4FF 0%, #FEF3C7 100%);
+  border: 1px solid #EEE8F7;
+  margin-bottom: 32px;
+}
+.ke-profile-avatar {
+  width: 80px; height: 80px; border-radius: 20px;
+  background: linear-gradient(135deg, #8B5CF6, #F472B6);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ke-font-display); font-weight: 700;
+  font-size: 28px; color: #fff;
+  box-shadow: 0 8px 24px rgba(139,92,246,0.3);
+}
+.ke-profile-info { flex: 1; }
+.ke-profile-name {
+  font-family: var(--ke-font-display); font-weight: 700;
+  font-size: 24px; color: #140A36; margin-bottom: 4px;
+}
+.ke-profile-email {
+  font-size: 14px; color: #6B7280; margin-bottom: 8px;
+}
+.ke-profile-stats {
+  font-size: 13px; color: #6B7280;
+}
+.ke-profile-section {
+  padding: 24px; border-radius: 16px;
+  background: #fff; border: 1px solid #E5E0F0;
+  margin-bottom: 20px;
+}
+.ke-profile-section h3 {
+  font-family: var(--ke-font-display); font-weight: 600;
+  font-size: 18px; color: #140A36; margin: 0 0 16px;
+}
+.ke-profile-section--danger {
+  border-color: #FEE2E2;
+  background: #FEF2F2;
+}
+.ke-profile-form {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.ke-classcode-display {
+  display: flex; align-items: center; gap: 12px;
+}
+.ke-classcode-display code {
+  font-family: var(--ke-font-display); font-weight: 700;
+  font-size: 28px; letter-spacing: 4px;
+  padding: 12px 20px; border-radius: 12px;
+  background: linear-gradient(135deg, #F8F4FF, #FEF3C7);
+  color: #6D28D9;
+  border: 2px solid #EEE8F7;
+}
+.ke-btn--danger {
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  color: #fff;
+  padding: 12px 20px; border-radius: 12px;
+  border: none; cursor: pointer;
+  font-family: var(--ke-font-display); font-weight: 600;
+  transition: transform .15s, box-shadow .15s;
+}
+.ke-btn--danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(239,68,68,0.3);
+}
+
+@media (max-width: 600px) {
+  .ke-profile-card { flex-direction: column; text-align: center; }
+  .ke-classcode-display { flex-direction: column; }
+  .ke-classcode-display code { font-size: 22px; }
+}
+
+/* ================================================
+   NEW: Topic card progress (stars)
+   ================================================ */
+.ke-topic-card__stars {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 14px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  z-index: 2;
+}
+.ke-topic-card--completed {
+  border: 2px solid rgba(250,204,21,0.5);
+}
+.ke-topic-card--completed::after {
+  content: '✓';
+  position: absolute; bottom: 8px; right: 8px;
+  width: 24px; height: 24px;
+  background: linear-gradient(135deg, #10B981, #059669);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #fff; font-weight: bold;
+}
+
+/* ================================================
+   NEW: Preview badge (teacher viewing as student)
+   ================================================ */
+.ke-preview-badge {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  padding: 8px 16px; border-radius: 20px;
+  background: rgba(251,191,36,0.9);
+  color: #78350F;
+  font-family: var(--ke-font-display); font-weight: 700;
+  font-size: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(251,191,36,0.4);
+}
+
+/* ================================================
+   NEW: Admin preview button
+   ================================================ */
+.ke-admin-preview-btn {
+  padding: 8px 12px; border-radius: 10px;
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  font-family: var(--ke-font-display); font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ke-admin-preview-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251,191,36,0.3);
+}
+
+/* ================================================
+   NEW: SVG icons for exercises
+   ================================================ */
+.ke-qcard__svg-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+  animation: ke-icon-bounce 2s ease-in-out infinite;
+}
+.ke-qcard__svg-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.ke-qcard__emoji-fallback {
+  font-size: 80px;
+  text-align: center;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+  animation: ke-icon-bounce 2s ease-in-out infinite;
+}
+@keyframes ke-icon-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@media (min-width: 768px) {
+  .ke-qcard__svg-icon { width: 140px; height: 140px; }
+  .ke-qcard__emoji-fallback { font-size: 100px; }
+}
+
+/* ================================================
+   Course page (A1→A2 curriculum)
+   ================================================ */
+.ke-course {
+  min-height: 100vh;
+  padding: 0 16px 60px;
+}
+.ke-course__header {
+  text-align: center;
+  padding: 60px 16px 32px;
+}
+.ke-course__mascot {
+  margin: 0 auto 16px;
+  animation: ke-float 4s ease-in-out infinite;
+}
+.ke-course__title {
+  font-family: var(--ke-font-display);
+  font-size: 32px; font-weight: 700;
+  margin: 0 0 8px;
+}
+.ke-course__accent {
+  background: linear-gradient(135deg, var(--ke-violet), var(--ke-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.ke-course__subtitle {
+  color: var(--ke-text-soft);
+  font-size: 16px; margin: 0;
+}
+
+/* Navigation tabs */
+.ke-course__nav {
+  display: flex; gap: 8px;
+  justify-content: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.ke-course__nav-btn {
+  padding: 10px 20px; border-radius: 20px;
+  background: var(--ke-surface);
+  border: 1px solid var(--ke-border);
+  font-family: var(--ke-font-display);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.ke-course__nav-btn:hover {
+  background: var(--ke-surface-2);
+  transform: translateY(-2px);
+}
+.ke-course__nav-btn--active {
+  background: linear-gradient(135deg, var(--ke-violet), var(--ke-violet-deep));
+  border-color: var(--ke-violet);
+  box-shadow: 0 4px 20px var(--ke-violet-glow);
+}
+
+/* Levels container */
+.ke-levels {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex; flex-direction: column; gap: 32px;
+}
+
+/* Level card */
+.ke-level {
+  background: var(--ke-surface);
+  border-radius: var(--ke-r-xl);
+  padding: 24px;
+  border: 1px solid var(--ke-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+}
+.ke-level::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--level-color, var(--ke-violet));
+}
+.ke-level__header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 12px;
+}
+.ke-level__emoji {
+  font-size: 40px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+.ke-level__name {
+  font-family: var(--ke-font-display);
+  font-size: 24px; font-weight: 700;
+  margin: 0;
+  color: var(--level-color, var(--ke-text));
+}
+.ke-level__subtitle {
+  font-size: 14px;
+  color: var(--ke-text-soft);
+  margin: 2px 0 0;
+}
+.ke-level__description {
+  color: var(--ke-text-muted);
+  font-size: 14px;
+  margin: 0 0 20px;
+  line-height: 1.6;
+}
+
+/* Units grid */
+.ke-units {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* Unit card */
+.ke-unit {
+  background: rgba(0,0,0,0.2);
+  border-radius: var(--ke-r-lg);
+  padding: 16px;
+  border: 1px solid var(--ke-border);
+  transition: all .2s;
+}
+.ke-unit:hover {
+  transform: translateY(-2px);
+  border-color: var(--ke-border-2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.ke-unit__header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.ke-unit__emoji {
+  font-size: 24px;
+}
+.ke-unit__title {
+  font-family: var(--ke-font-display);
+  font-size: 16px; font-weight: 600;
+}
+.ke-unit__skills {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 12px;
+}
+.ke-unit__skill {
+  background: rgba(139,92,246,0.2);
+  padding: 4px 10px; border-radius: 12px;
+  font-size: 12px;
+  color: var(--ke-text-soft);
+  border: 1px solid rgba(139,92,246,0.3);
+}
+.ke-unit__methodology {
+  font-size: 12px;
+  color: var(--ke-text-muted);
+  background: rgba(34,211,238,0.1);
+  padding: 8px 12px; border-radius: 10px;
+  border-left: 3px solid var(--ke-cyan);
+}
+.ke-unit__method-label {
+  font-weight: 600;
+  color: var(--ke-cyan);
+}
+
+/* CTA at bottom */
+.ke-course__cta {
+  max-width: 600px;
+  margin: 48px auto 0;
+  text-align: center;
+  padding: 32px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(244,114,182,0.15));
+  border-radius: var(--ke-r-xl);
+  border: 1px solid rgba(139,92,246,0.3);
+}
+.ke-course__cta h3 {
+  font-family: var(--ke-font-display);
+  font-size: 24px; margin: 0 0 8px;
+}
+.ke-course__cta p {
+  color: var(--ke-text-soft);
+  margin: 0 0 20px;
+}
+
+/* Methodology tab */
+.ke-methodology {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.ke-methodology__title {
+  font-family: var(--ke-font-display);
+  font-size: 28px; text-align: center;
+  margin: 0 0 12px;
+}
+.ke-methodology__intro {
+  text-align: center;
+  color: var(--ke-text-soft);
+  margin: 0 0 32px;
+  line-height: 1.7;
+}
+
+/* Principles grid */
+.ke-principles {
+  display: flex; flex-direction: column; gap: 20px;
+}
+.ke-principle {
+  background: var(--ke-surface);
+  border-radius: var(--ke-r-lg);
+  padding: 20px;
+  border: 1px solid var(--ke-border);
+  display: flex; gap: 16px;
+  align-items: flex-start;
+  transition: all .2s;
+}
+.ke-principle:hover {
+  transform: translateX(4px);
+  border-color: var(--ke-border-2);
+}
+.ke-principle__icon {
+  font-size: 36px;
+  flex-shrink: 0;
+  width: 56px; height: 56px;
+  background: rgba(139,92,246,0.15);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ke-principle__content {
+  flex: 1;
+}
+.ke-principle__name {
+  font-family: var(--ke-font-display);
+  font-size: 18px; font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--ke-violet);
+}
+.ke-principle__description {
+  color: var(--ke-text-soft);
+  font-size: 14px;
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+.ke-principle__example {
+  background: rgba(34,211,238,0.1);
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 13px;
+  color: var(--ke-text-soft);
+  border-left: 3px solid var(--ke-cyan);
+}
+.ke-principle__example-label {
+  color: var(--ke-cyan);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Tips for parents */
+.ke-methodology__tips {
+  margin-top: 40px;
+  background: linear-gradient(135deg, rgba(250,204,21,0.1), rgba(251,146,60,0.1));
+  border-radius: var(--ke-r-xl);
+  padding: 24px;
+  border: 1px solid rgba(250,204,21,0.3);
+}
+.ke-methodology__tips h3 {
+  font-family: var(--ke-font-display);
+  font-size: 20px; margin: 0 0 16px;
+}
+.ke-methodology__tips ul {
+  margin: 0; padding: 0 0 0 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ke-methodology__tips li {
+  color: var(--ke-text-soft);
+  line-height: 1.6;
+}
+.ke-methodology__tips li strong {
+  color: var(--ke-yellow);
+}
+
+/* Back button */
+.ke-back-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--ke-text-soft);
+  font-size: 14px; font-weight: 500;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  transition: all .2s;
+  margin-bottom: 16px;
+}
+.ke-back-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--ke-text);
+}
+
+/* Course link buttons */
+.ke-landing__course-link {
+  display: block;
+  margin-top: 12px;
+  color: var(--ke-cyan);
+  font-size: 14px;
+  opacity: 0.8;
+  transition: all .2s;
+}
+.ke-landing__course-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+.ke-course-link-wrap {
+  text-align: center;
+  margin: 0 0 24px;
+}
+.ke-course-link-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(34,211,238,0.15));
+  border: 1px solid rgba(139,92,246,0.3);
+  font-family: var(--ke-font-display);
+  font-size: 14px; font-weight: 600;
+  color: var(--ke-text-soft);
+  transition: all .2s;
+}
+.ke-course-link-btn:hover {
+  background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.25));
+  border-color: rgba(139,92,246,0.5);
+  transform: translateY(-2px);
+  color: var(--ke-text);
+  box-shadow: 0 8px 24px rgba(139,92,246,0.2);
+}
+
+/* ================================================
+   Methodology badge on exercise cards
+   ================================================ */
+.ke-method-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--method-color, var(--ke-cyan));
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--method-color, var(--ke-cyan));
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  animation: ke-badge-pulse 3s ease-in-out infinite;
+}
+@keyframes ke-badge-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+.ke-feedback__method-tip {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(34,211,238,0.1);
+  border-left: 3px solid var(--ke-cyan);
+  font-size: 12px;
+  color: var(--ke-text-soft);
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .ke-course__title { font-size: 26px; }
+  .ke-level { padding: 16px; }
+  .ke-level__emoji { font-size: 32px; }
+  .ke-level__name { font-size: 20px; }
+  .ke-units { grid-template-columns: 1fr; }
+  .ke-principle { flex-direction: column; align-items: center; text-align: center; }
+  .ke-principle__example { border-left: none; border-top: 3px solid var(--ke-cyan); }
+  .ke-method-badge { top: 8px; right: 8px; font-size: 10px; padding: 3px 8px; }
+}

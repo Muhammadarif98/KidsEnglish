@@ -1,10 +1,11 @@
 // pages/result.js — End-of-topic result screen.
 
-import { getTeacherByCode, getTopic } from '../db.js';
+import { getTeacherByCode, getTopic, saveTopicProgress } from '../db.js';
 import { topicAccent } from '../tokens.js';
 import { topBarHTML, auroraHTML, starfieldHTML, burstConfetti, esc } from '../ui.js';
 import { mascotSVG } from '../mascot.js';
 import { navigate } from '../router.js';
+import { getStudentSession } from './landing.js';
 
 export async function renderResult(code, topicId) {
   const root = document.getElementById('root');
@@ -28,6 +29,16 @@ export async function renderResult(code, topicId) {
   }
 
   const { score, total } = result;
+
+  // Сохраняем прогресс в БД если есть авторизованный ученик
+  const session = getStudentSession();
+  if (session?.id) {
+    try {
+      await saveTopicProgress(session.id, topicId, { score, maxScore: total });
+    } catch (err) {
+      console.error('Failed to save progress:', err);
+    }
+  }
   const pct = total > 0 ? score / total : 0;
   const stars = pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : pct >= 0.3 ? 1 : 0;
   const mood = pct >= 0.9 ? 'Шикарно!' : pct >= 0.6 ? 'Отлично!' : pct >= 0.3 ? 'Хорошо!' : 'Попробуй ещё!';

@@ -58,6 +58,23 @@ service cloud.firestore {
                             && request.resource.data.ownerId == resource.data.ownerId;
     }
 
+    // --- students/{id} ---
+    // Ученики класса. Учитель управляет учениками своего класса.
+    // Чтение публичное (для авторизации ученика по коду+паролю).
+    match /students/{id} {
+      allow read: if true;
+      allow create: if isAuth();
+      allow update, delete: if isAuth();
+    }
+
+    // --- progress/{id} ---
+    // Прогресс учеников. Чтение и запись публичные (ученики не авторизованы в Firebase).
+    match /progress/{id} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAuth();
+    }
+
     // Всё остальное — запрещено.
     match /{document=**} {
       allow read, write: if false;

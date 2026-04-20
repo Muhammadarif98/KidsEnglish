@@ -1,10 +1,11 @@
 // pages/class-home.js — Student view: topic catalogue for one teacher's class.
 
-import { getTeacherByCode, listTopics, listExercises } from '../db.js';
+import { getTeacherByCode, listTopics, listExercises, getStudentStats } from '../db.js';
 import { topicColorPair } from '../tokens.js';
 import { topBarHTML, auroraHTML, starfieldHTML, esc } from '../ui.js';
 import { mascotSVG } from '../mascot.js';
 import { navigate } from '../router.js';
+import { getStudentSession, clearStudentSession } from './landing.js';
 
 const LS_LAST_CODE = 'ke_last_code';
 
@@ -43,28 +44,53 @@ export async function renderClassHome(code) {
     listExercises({ ownerId: teacher.uid, topicId: t.id }).then(xs => xs.length).catch(() => 0)
   ));
 
+  // Получаем сессию ученика и его прогресс
+  const session = getStudentSession();
+  let stats = { totalStars: 0, completedTopics: 0, progress: [] };
+  let studentName = '';
+  let isPreview = new URLSearchParams(window.location.search).has('preview');
+
+  if (session?.id) {
+    stats = await getStudentStats(session.id);
+    studentName = `${session.firstName || ''}`.trim();
+  }
+
+  // Создаём map прогресса для быстрого поиска
+  const progressMap = new Map(stats.progress.map(p => [p.topicId, p]));
+
+  const greeting = studentName ? `Привет, ${esc(studentName)}!` : 'Привет!';
+  const previewBadge = isPreview ? '<div class="ke-preview-badge">👁 Режим просмотра</div>' : '';
+
   root.innerHTML = `
     <section class="ke-page ke-home">
       ${auroraHTML()}
       ${starfieldHTML(40)}
       ${topBarHTML({
-        stars: 42,
+        stars: stats.totalStars,
         right: `<a href="/" class="ke-topbar__exit" title="Выйти из класса" aria-label="Выйти из класса">✕</a>`
       })}
+
+      ${previewBadge}
 
       <div class="ke-home__hero">
         <div class="ke-home__mascot">${mascotSVG({ size: 120, mood: 'happy' })}</div>
         <div class="ke-home__hero-text">
           <div class="ke-home__badge"><span>👨‍🏫</span> Класс ${esc(teacher.displayName)}</div>
-          <h1 class="ke-home__title">Привет!<br>Выбери <span class="ke-home__title-accent">тему</span></h1>
+          <h1 class="ke-home__title">${greeting}<br>Выбери <span class="ke-home__title-accent">тему</span></h1>
           <p class="ke-home__subtitle">Зарабатывай звёзды ⭐ за правильные ответы.</p>
         </div>
       </div>
 
       <div class="ke-stats">
-        <div class="ke-stat"><div class="ke-stat__icon">⭐</div><div class="ke-stat__value" style="color:#FACC15">42</div><div class="ke-stat__label">Звёзды</div></div>
-        <div class="ke-stat"><div class="ke-stat__icon">🔥</div><div class="ke-stat__value" style="color:#FB923C">7 дн.</div><div class="ke-stat__label">Серия</div></div>
-        <div class="ke-stat"><div class="ke-stat__icon">🏆</div><div class="ke-stat__value" style="color:#A3E635">0 / ${topics.length}</div><div class="ke-stat__label">Тем</div></div>
+        <div class="ke-stat"><div class="ke-stat__icon">⭐</div><div class="ke-stat__value" style="color:#FACC15">${stats.totalStars}</div><div class="ke-stat__label">Звёзды</div></div>
+        <div class="ke-stat"><div class="ke-stat__icon">🔥</div><div class="ke-stat__value" style="color:#FB923C">${stats.completedTopics > 0 ? stats.completedTopics : '—'}</div><div class="ke-stat__label">Пройдено</div></div>
+        <div class="ke-stat"><div class="ke-stat__icon">🏆</div><div class="ke-stat__value" style="color:#A3E635">${stats.completedTopics} / ${topics.length}</div><div class="ke-stat__label">Тем</div></div>
+      </div>
+
+      <div class="ke-course-link-wrap">
+        <a href="/class/${esc(teacher.classCode)}/course" class="ke-course-link-btn">
+          📚 Курс A1 → A2 — методика и программа
+        </a>
       </div>
 
       <div class="ke-topics-header">
@@ -85,13 +111,18 @@ export async function renderClassHome(code) {
               const glow = cc1;
               const count = counts[i];
               const isEmpty = count === 0;
+              const topicProgress = progressMap.get(t.id);
+              const stars = topicProgress?.stars || 0;
+              const starsHTML = stars > 0 ? `<div class="ke-topic-card__stars">${'⭐'.repeat(stars)}</div>` : '';
+              const completedClass = stars > 0 ? 'ke-topic-card--completed' : '';
               return `
-                <button class="ke-topic-card"
+                <button class="ke-topic-card ${completedClass}"
                         data-id="${esc(t.id)}"
                         data-code="${esc(teacher.classCode)}"
                         ${isEmpty ? 'disabled title="Нет заданий"' : ''}
                         style="--card-c1:${c1}; --card-c2:${c2}; --card-c1-35:${cc1}; --card-glow:${glow}; --card-delay:${i * 0.06}s;">
                   <div class="ke-topic-card__blob"></div>
+                  ${starsHTML}
                   <div class="ke-topic-card__tile"><span>${esc(t.emoji || '📚')}</span></div>
                   <div class="ke-topic-card__name">${esc(t.title)}</div>
                   <div class="ke-topic-card__meta">${count} ${pluralTasks(count)}</div>
@@ -109,12 +140,13 @@ export async function renderClassHome(code) {
     navigate(`/class/${encodeURIComponent(teacher.classCode)}/topic/${encodeURIComponent(id)}`);
   });
 
-  // "Exit class" button clears the remembered code
+  // "Exit class" button clears the remembered code and session
   const exit = document.querySelector('.ke-topbar__exit');
   if (exit) {
-    exit.addEventListener('click', () => {
-      localStorage.removeItem(LS_LAST_CODE);
-      // Let the router intercept — link navigation
+    exit.addEventListener('click', (e) => {
+      e.preventDefault();
+      clearStudentSession();
+      navigate('/', { replace: true });
     });
   }
 }

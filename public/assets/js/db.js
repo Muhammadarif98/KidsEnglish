@@ -22,7 +22,26 @@ const LS = {
   topics: 'ke_topics_v2',
   exercises: 'ke_exercises_v2',
   seededSets: 'ke_seeded_sets_v2',
+  students: 'ke_students_v2',
+  progress: 'ke_progress_v2',
 };
+
+// ─── Password generator (simple words for kids) ───
+const PASSWORD_WORDS = [
+  // Животные (легко запомнить)
+  'apple', 'banana', 'cherry', 'grape', 'lemon', 'mango', 'orange', 'peach',
+  'tiger', 'lion', 'bear', 'wolf', 'fox', 'rabbit', 'panda', 'koala',
+  'star', 'moon', 'sun', 'cloud', 'rain', 'snow', 'wind', 'storm',
+  'happy', 'funny', 'sunny', 'lucky', 'brave', 'smart', 'cool', 'super',
+  'red', 'blue', 'green', 'pink', 'gold', 'silver', 'ruby', 'jade',
+  'rocket', 'robot', 'ninja', 'pirate', 'wizard', 'dragon', 'phoenix', 'unicorn',
+];
+
+export function generateStudentPassword() {
+  const word = PASSWORD_WORDS[Math.floor(Math.random() * PASSWORD_WORDS.length)];
+  const num = Math.floor(Math.random() * 90) + 10; // 10-99
+  return `${word}${num}`;
+}
 
 // ─── Firebase lazy-init ───
 let _fbReady = null;
@@ -115,6 +134,33 @@ export async function createTeacher(uid, { displayName, email }) {
   codes[classCode] = uid;
   lsWriteObj(LS.codes, codes);
   return { uid, ...doc };
+}
+
+export async function updateTeacher(uid, patch) {
+  const safePatch = { ...patch };
+  delete safePatch.uid;
+  delete safePatch.classCode; // код класса не меняется
+  delete safePatch.createdAt;
+
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    await fs.updateDoc(fs.doc(db, 'teachers', uid), safePatch);
+    // Обновляем имя в classCodes если изменилось displayName
+    if (safePatch.displayName) {
+      const teacher = await getTeacher(uid);
+      if (teacher?.classCode) {
+        await fs.updateDoc(fs.doc(db, 'classCodes', teacher.classCode), { teacherName: safePatch.displayName });
+      }
+    }
+    const snap = await fs.getDoc(fs.doc(db, 'teachers', uid));
+    return { uid: snap.id, ...snap.data() };
+  }
+  const teachers = lsReadObj(LS.teachers);
+  if (!teachers[uid]) throw new Error('Teacher not found');
+  teachers[uid] = { ...teachers[uid], ...safePatch };
+  lsWriteObj(LS.teachers, teachers);
+  return teachers[uid];
 }
 
 /** Copies seed topics + exercises into a teacher's account. Idempotent. */
@@ -373,3 +419,225 @@ export async function reorderExercises(ownerId, topicId, orderedIds) {
 
 export function isFirebaseMode() { return IS_FIREBASE_ENABLED; }
 export const LOCAL_DEMO_CODE = LOCAL_TEACHER_CODE;
+
+// ─── Students (учеченики класса) ───
+// Схема: students/{id} — { id, classCode, firstName, lastName, password, createdAt }
+
+export async function listStudents(classCode) {
+  if (!classCode) throw new Error('listStudents: classCode required');
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    const q = fs.query(fs.collection(db, 'students'), fs.where('classCode', '==', classCode));
+    const snap = await fs.getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', 'ru'));
+  }
+  return lsRead(LS.students)
+    .filter(s => s.classCode === classCode)
+    .sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', 'ru'));
+}
+
+export async function getStudentByPassword(classCode, password) {
+  if (!classCode || !password) return null;
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    const q = fs.query(
+      fs.collection(db, 'students'),
+      fs.where('classCode', '==', classCode),
+      fs.where('password', '==', password)
+    );
+    const snap = await fs.getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() };
+  }
+  return lsRead(LS.students).find(s => s.classCode === classCode && s.password === password) || null;
+}
+
+export async function getStudent(id) {
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    const snap = await fs.getDoc(fs.doc(db, 'students', id));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  }
+  return lsRead(LS.students).find(s => s.id === id) || null;
+}
+
+export async function createStudent(classCode, { firstName, lastName }) {
+  if (!classCode) throw new Error('createStudent: classCode required');
+  const id = makeId('stu');
+  const password = generateStudentPassword();
+  const doc = {
+    classCode,
+    firstName: firstName || '',
+    lastName: lastName || '',
+    password,
+    createdAt: Date.now(),
+  };
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    await fs.setDoc(fs.doc(db, 'students', id), doc);
+    return { id, ...doc };
+  }
+  const list = lsRead(LS.students);
+  list.push({ id, ...doc });
+  lsWrite(LS.students, list);
+  return { id, ...doc };
+}
+
+export async function updateStudent(id, patch) {
+  const safePatch = { ...patch };
+  delete safePatch.id;
+  delete safePatch.classCode; // нельзя переносить в другой класс
+  delete safePatch.password;  // пароль генерируется автоматически
+
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    await fs.updateDoc(fs.doc(db, 'students', id), safePatch);
+    const snap = await fs.getDoc(fs.doc(db, 'students', id));
+    return { id: snap.id, ...snap.data() };
+  }
+  const list = lsRead(LS.students);
+  const idx = list.findIndex(s => s.id === id);
+  if (idx < 0) throw new Error('Student not found');
+  list[idx] = { ...list[idx], ...safePatch };
+  lsWrite(LS.students, list);
+  return list[idx];
+}
+
+export async function deleteStudent(id) {
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    await fs.deleteDoc(fs.doc(db, 'students', id));
+    // Удаляем прогресс ученика
+    const q = fs.query(fs.collection(db, 'progress'), fs.where('studentId', '==', id));
+    const snap = await fs.getDocs(q);
+    await Promise.all(snap.docs.map(d => fs.deleteDoc(d.ref)));
+    return;
+  }
+  lsWrite(LS.students, lsRead(LS.students).filter(s => s.id !== id));
+  lsWrite(LS.progress, lsRead(LS.progress).filter(p => p.studentId !== id));
+}
+
+export async function regenerateStudentPassword(id) {
+  const newPassword = generateStudentPassword();
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    await fs.updateDoc(fs.doc(db, 'students', id), { password: newPassword });
+    const snap = await fs.getDoc(fs.doc(db, 'students', id));
+    return { id: snap.id, ...snap.data() };
+  }
+  const list = lsRead(LS.students);
+  const idx = list.findIndex(s => s.id === id);
+  if (idx < 0) throw new Error('Student not found');
+  list[idx].password = newPassword;
+  lsWrite(LS.students, list);
+  return list[idx];
+}
+
+// ─── Progress (прогресс учеников) ───
+// Схема: progress/{id} — { studentId, topicId, score, maxScore, stars, completedAt }
+
+export async function getStudentProgress(studentId) {
+  if (!studentId) return [];
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    const q = fs.query(fs.collection(db, 'progress'), fs.where('studentId', '==', studentId));
+    const snap = await fs.getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  return lsRead(LS.progress).filter(p => p.studentId === studentId);
+}
+
+export async function getTopicProgress(studentId, topicId) {
+  if (!studentId || !topicId) return null;
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    const q = fs.query(
+      fs.collection(db, 'progress'),
+      fs.where('studentId', '==', studentId),
+      fs.where('topicId', '==', topicId)
+    );
+    const snap = await fs.getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() };
+  }
+  return lsRead(LS.progress).find(p => p.studentId === studentId && p.topicId === topicId) || null;
+}
+
+export async function saveTopicProgress(studentId, topicId, { score, maxScore }) {
+  if (!studentId || !topicId) throw new Error('saveTopicProgress: studentId and topicId required');
+
+  // Рассчитываем звёзды: 3 за 100%, 2 за >=70%, 1 за >=50%, 0 иначе
+  const percent = maxScore > 0 ? (score / maxScore) * 100 : 0;
+  let stars = 0;
+  if (percent >= 100) stars = 3;
+  else if (percent >= 70) stars = 2;
+  else if (percent >= 50) stars = 1;
+
+  const ctx = await fb();
+  if (ctx) {
+    const { fs, db } = ctx;
+    // Проверяем, есть ли уже запись
+    const q = fs.query(
+      fs.collection(db, 'progress'),
+      fs.where('studentId', '==', studentId),
+      fs.where('topicId', '==', topicId)
+    );
+    const snap = await fs.getDocs(q);
+
+    if (!snap.empty) {
+      // Обновляем только если результат лучше
+      const existing = snap.docs[0];
+      const existingData = existing.data();
+      if (stars > existingData.stars || (stars === existingData.stars && score > existingData.score)) {
+        await fs.updateDoc(existing.ref, { score, maxScore, stars, completedAt: Date.now() });
+        return { id: existing.id, studentId, topicId, score, maxScore, stars };
+      }
+      return { id: existing.id, ...existingData };
+    }
+
+    // Создаём новую запись
+    const id = makeId('prog');
+    const doc = { studentId, topicId, score, maxScore, stars, completedAt: Date.now() };
+    await fs.setDoc(fs.doc(db, 'progress', id), doc);
+    return { id, ...doc };
+  }
+
+  // Local mode
+  const list = lsRead(LS.progress);
+  const idx = list.findIndex(p => p.studentId === studentId && p.topicId === topicId);
+
+  if (idx >= 0) {
+    const existing = list[idx];
+    if (stars > existing.stars || (stars === existing.stars && score > existing.score)) {
+      list[idx] = { ...existing, score, maxScore, stars, completedAt: Date.now() };
+      lsWrite(LS.progress, list);
+      return list[idx];
+    }
+    return existing;
+  }
+
+  const id = makeId('prog');
+  const doc = { id, studentId, topicId, score, maxScore, stars, completedAt: Date.now() };
+  list.push(doc);
+  lsWrite(LS.progress, list);
+  return doc;
+}
+
+export async function getStudentStats(studentId) {
+  const progress = await getStudentProgress(studentId);
+  const totalStars = progress.reduce((sum, p) => sum + (p.stars || 0), 0);
+  const completedTopics = progress.filter(p => p.stars > 0).length;
+  return { totalStars, completedTopics, progress };
+}

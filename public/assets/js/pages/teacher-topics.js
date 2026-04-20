@@ -254,11 +254,14 @@ export function teacherHeaderHTML(user, teacher, active = 'topics') {
         </a>
         <nav class="ke-admin-nav">
           <a href="/teacher/topics" class="ke-admin-nav__item ${active === 'topics' ? 'ke-admin-nav__item--active' : ''}">Мои темы</a>
+          <a href="/teacher/students" class="ke-admin-nav__item ${active === 'students' ? 'ke-admin-nav__item--active' : ''}">Ученики</a>
+          <a href="/teacher/profile" class="ke-admin-nav__item ${active === 'profile' ? 'ke-admin-nav__item--active' : ''}">Профиль</a>
         </nav>
       </div>
       <div class="ke-admin-user">
         <div class="ke-admin-user__email">${esc(teacher.displayName || user.email || 'Преподаватель')}</div>
         <div class="ke-admin-user__avatar">${esc(initials)}</div>
+        <a href="/class/${esc(teacher.classCode)}?preview=1" class="ke-admin-preview-btn" title="Тестировать как ученик" target="_blank">👁 Превью</a>
         <button class="ke-admin-user__signout" id="ke-signout">Выйти</button>
       </div>
     </div>`;

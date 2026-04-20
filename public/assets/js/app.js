@@ -7,6 +7,8 @@
 //     /class/:code                        — список тем класса
 //     /class/:code/topic/:id              — задания
 //     /class/:code/topic/:id/result       — результат
+//     /course                               — курс A1→A2 (общий)
+//     /class/:code/course                   — курс A1→A2 (привязка к классу)
 //
 //   Преподавательская часть:
 //     /teacher                            — вход / регистрация (табы)
@@ -27,9 +29,14 @@ router.add('/class/:code',                        (ctx) => import('./pages/class
 router.add('/class/:code/topic/:id',              (ctx) => import('./pages/topic.js').then(m => m.renderTopic(ctx.params.code, ctx.params.id)));
 router.add('/class/:code/topic/:id/result',       (ctx) => import('./pages/result.js').then(m => m.renderResult(ctx.params.code, ctx.params.id)));
 
+router.add('/course',                             () => import('./pages/course.js').then(m => m.renderCourse()));
+router.add('/class/:code/course',                 (ctx) => import('./pages/course.js').then(m => m.renderCourse(ctx.params.code)));
+
 router.add('/teacher',                            () => import('./pages/teacher-auth.js').then(m => m.renderTeacherAuth()));
 router.add('/teacher/topics',                     () => import('./pages/teacher-topics.js').then(m => m.renderTeacherTopics()));
 router.add('/teacher/topics/:id',                 (ctx) => import('./pages/teacher-editor.js').then(m => m.renderTeacherEditor(ctx.params.id)));
+router.add('/teacher/students',                   () => import('./pages/teacher-students.js').then(m => m.renderTeacherStudents()));
+router.add('/teacher/profile',                    () => import('./pages/teacher-profile.js').then(m => m.renderTeacherProfile()));
 
 // Legacy redirects
 router.add('/admin',                              () => router.navigate('/teacher', { replace: true }));
